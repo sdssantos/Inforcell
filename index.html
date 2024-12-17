@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase CRUD</title>
+</head>
+<body>
+    <h1>CRUD com Firebase Firestore</h1>
+
+    <div>
+        <h2>Adicionar um documento</h2>
+        <input type="text" id="nome" placeholder="Nome">
+        <input type="text" id="idade" placeholder="Idade">
+        <button onclick="createUser()">Adicionar Usuário</button>
+    </div>
+
+    <div>
+        <h2>Lista de usuários</h2>
+        <ul id="userList"></ul>
+    </div>
+
+    <div>
+        <h2>Atualizar um documento</h2>
+        <input type="text" id="updateId" placeholder="ID do Usuário">
+        <input type="text" id="updateName" placeholder="Novo Nome">
+        <button onclick="updateUser()">Atualizar Usuário</button>
+    </div>
+
+    <div>
+        <h2>Deletar um documento</h2>
+        <input type="text" id="deleteId" placeholder="ID do Usuário">
+        <button onclick="deleteUser()">Deletar Usuário</button>
+    </div>
+
+    <script type="module">
+        // Importando Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.13.0/firebase-firestore.js";
+
+        // Configurações do Firebase
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_AUTH_DOMAIN",
+            projectId: "SEU_PROJECT_ID",
+            storageBucket: "SEU_STORAGE_BUCKET",
+            messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
+
+        // Inicializar o Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Função para adicionar um documento (CREATE)
+        async function createUser() {
+            const nome = document.getElementById("nome").value;
+            const idade = document.getElementById("idade").value;
+
+            try {
+                const docRef = await addDoc(collection(db, "users"), {
+                    nome: nome,
+                    idade: idade
+                });
+                console.log("Documento adicionado com ID: ", docRef.id);
+                readUsers(); // Atualiza a lista após a adição
+            } catch (e) {
+                console.error("Erro ao adicionar documento: ", e);
+            }
+        }
+
+        // Função para ler documentos (READ)
+        async function readUsers() {
+            const userList = document.getElementById("userList");
+            userList.innerHTML = ''; // Limpa a lista para não duplicar
+
+            const querySnapshot = await getDocs(collection(db, "users"));
+            querySnapshot.forEach((doc) => {
+                const user = doc.data();
+                const li = document.createElement("li");
+                li.textContent = `ID: ${doc.id}, Nome: ${user.nome}, Idade: ${user.idade}`;
+                userList.appendChild(li);
+            });
+        }
+
+        // Função para atualizar um documento (UPDATE)
+        async function updateUser() {
+            const id = document.getElementById("updateId").value;
+            const novoNome = document.getElementById("updateName").value;
+
+            const userRef = doc(db, "users", id);
+            try {
+                await updateDoc(userRef, {
+                    nome: novoNome
+                });
+                console.log("Documento atualizado com sucesso");
+                readUsers(); // Atualiza a lista após a atualização
+            } catch (e) {
+                console.error("Erro ao atualizar documento: ", e);
+            }
+        }
+
+        // Função para deletar um documento (DELETE)
+        async function deleteUser() {
+            const id = document.getElementById("deleteId").value;
+
+            const userRef = doc(db, "users", id);
+            try {
+                await deleteDoc(userRef);
+                console.log("Documento deletado com sucesso");
+                readUsers(); // Atualiza a lista após a exclusão
+            } catch (e) {
+                console.error("Erro ao deletar documento: ", e);
+            }
+        }
+
+        // Lê os usuários quando a página carrega
+        readUsers();
+    </script>
+</body>
+</html>
